@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 
+from delta.tables import DeltaTable
 from pyspark import StorageLevel
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
@@ -36,26 +37,28 @@ def get_spark_session(appname, minio_url, minio_access_key, minio_secret_key):
 
 def extract(sc, bucket_name, raw_data_path):
     return (
-        sc.read.format("com.databricks.spark.csv")
+        sc.read.format("csv")
         .option("header", "true")
         .option("inferSchema", "true")
         .option("delimiter", ",")
         .option("mode", "DROPMALFORMED")
-        .load("s3a://" + os.path.os.path.join(bucket_name, raw_data_path))
+        .load("s3a://" + os.path.join(bucket_name, raw_data_path))
     )
 
 
-# spark session
-spark = get_spark_session("ETL", "http://minio:9000", "spark", "spark12345")
+# Spark session
+spark = get_spark_session("ETL", "http://minio:9000", "minio", "minio12345")
+
 # Set log4j
 log4jLogger = spark._jvm.org.apache.log4j
 logger = log4jLogger.LogManager.getLogger("ETL_LOGGER")
 logger.setLevel(log4jLogger.Level.INFO)
-# sdf = sdf.persist(StorageLevel.DISK_ONLY)
-# sdf.unpersist()
+
+# Extract data
 sdf = extract(spark, "raw-data", "bitcoinity_data.csv")
 sdf = sdf.withColumn("Time", sdf["Time"].cast("timestamp").alias("Time"))
 
+# Add new column 'party_ts' with formatted timestamp
 sdf = sdf.withColumn(
     "party_ts",
     F.concat_ws(
@@ -66,11 +69,17 @@ sdf = sdf.withColumn(
     ),
 )
 
+# Show schema
 sdf.printSchema()
-logger.info(f"the count is {sdf.count()}")
 
-sdf.write.format("delta").mode("overwrite").option("mergeSchema", "true").partitionBy(
-    "party_ts"
-).save("s3a://raw-data/delta/party")
+# Perform upsert using Delta Lake
+delta_table = DeltaTable.forPath(spark, "s3a://raw-data/delta/party")
+
+delta_table.alias("t1").merge(
+    sdf.alias("t2"), "t1.Time = t2.Time"
+).whenNotMatchedInsertAll().execute()
+
+# Read and show the merged data
+spark.read.format("delta").load("s3a://raw-data/delta/party").repartition(1).show()
 
 spark.stop()
