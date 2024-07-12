@@ -44,9 +44,9 @@ COPY airflow.cfg /opt/airflow/airflow.cfg
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
-# Set entry point and expose port
-ENTRYPOINT ["/run.sh"]
-EXPOSE 8000
-
 # Set working directory
 WORKDIR /opt/airflow
+
+# Set entry point and expose port
+CMD ["/run.sh"]
+EXPOSE 8000
