@@ -2,7 +2,9 @@ import logging
 import os
 import sys
 
+# from delta import DeltaTable
 from delta.tables import DeltaTable
+from pyspark import StorageLevel
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
@@ -41,18 +43,7 @@ def get_spark_session(
     return sc
 
 
-def extract(sc, bucket_name, raw_data_path):
-    return (
-        sc.read.format("csv")
-        .option("header", "true")
-        .option("inferSchema", "true")
-        .option("delimiter", ",")
-        .option("mode", "DROPMALFORMED")
-        .load("s3a://" + os.path.join(bucket_name, raw_data_path))
-    )
-
-
-# Initialize Spark session
+# spark session
 spark = get_spark_session(
     "ETL", "thrift://hive:9083", "http://minio:9000", "root", "root12345"
 )
@@ -62,49 +53,28 @@ log4jLogger = spark._jvm.org.apache.log4j
 logger = log4jLogger.LogManager.getLogger("ETL_LOGGER")
 logger.setLevel(log4jLogger.Level.INFO)
 
-# Creating a Delta table and registering it in Hive
-delta_table_path = "s3a://raw-data/delta/bitcoin_data"
-sdf = extract(spark, "raw-data", "bitcoinity_data.csv")
-sdf = sdf.withColumn("Time", sdf["Time"].cast("timestamp").alias("Time"))
-
-# Add partition column
-sdf = sdf.withColumn(
-    "party_ts",
-    F.concat_ws(
-        "-", F.year(F.col("Time")), F.month(F.col("Time")), F.dayofmonth(F.col("Time"))
-    ),
+sql_delta_table = """
+CREATE EXTERNAL TABLE IF NOT EXISTS bitcoinss (
+    time timestamp, 
+    bitbay double, 
+    bitfinex double, 
+    bitstamp double, 
+    party_ts string
 )
-
-# Save as Delta table
-sdf.write.format("delta").mode("overwrite").option("mergeSchema", "true").partitionBy(
-    "party_ts"
-).save(delta_table_path)
-
-# Create a Hive table to point to the Delta table
-spark.sql(
-    f"""
-    CREATE EXTERNAL TABLE IF NOT EXISTS delta_bitcoin (
-        Time timestamp,
-        bitbay double,
-        bitfinex double,
-        bitstamp double,
-        btcmarkets double,
-        cexio double,
-        coinbase double,
-        gemini double,
-        korbit double,
-        kraken double,
-        others double,
-        party_ts string
-    )
-    STORED AS DELTA
-    LOCATION '{delta_table_path}'
+PARTITIONED BY (party_ts)
+ROW FORMAT SERDE 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
+STORED AS INPUTFORMAT 'org.apache.hadoop.hive.ql.io.SymlinkTextInputFormat'
+OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION 's3a://raw-data/delta/bitcoin_data/_symlink_format_manifest/'
 """
+
+spark.sql(sql_delta_table)
+spark.sql("MSCK REPAIR TABLE bitcoinss")
+spark.sql(
+    "ALTER TABLE bitcoinss SET TBLPROPERTIES(delta.compatibility.symlinkFormatManifest.enabled=true)"
 )
 
-# Query the Delta table through Hive
-sdf = spark.sql("SELECT * FROM delta_bitcoin")
+sdf = spark.sql("SELECT * FROM bitcoinss")
 sdf.printSchema()
-sdf.show()
 
 spark.stop()

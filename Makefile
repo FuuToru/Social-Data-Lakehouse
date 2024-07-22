@@ -1,26 +1,40 @@
-.PHONY: airflow spark hive scale-spark minio down run-spark
+.PHONY: airflow spark hive scale-spark minio superset down presto-cluster presto-cli run-spark
+
+down:
+	docker-compose down -v
 
 minio:
 	docker-compose up -d minio
+	sleep 10
 
 airflow:
 	docker-compose up -d airflow
+	sleep 10
 
 spark:
 	docker-compose up -d spark-master
-	sleep 2
+	sleep 5
 	docker-compose up -d spark-worker
 
 hive:
 	docker-compose up -d mariadb
-	sleep 2
+	sleep 10
 	docker-compose up -d hive
 
-scale-spark:
-	docker-compose up -d --scale spark-worker=3
+presto-cluster:
+	docker-compose up -d presto presto-worker
 
-down:
-	docker-compose down -v
+superset:
+	docker-compose up -d superset
+	sleep 10
+	docker-compose exec superset superset-init
+
+scale-spark:
+	docker-compose scale spark-worker=3
+
+presto-cli:
+	docker-compose exec presto \
+	presto --server localhost:8888 --catalog hive --schema default
 
 run-spark:
 	docker-compose exec airflow \
@@ -32,4 +46,4 @@ run-spark:
 	dags/jars/aws-java-sdk-bundle-1.11.874.jar,\
 	dags/jars/delta-core_2.12-1.0.0.jar,\
 	dags/jars/hadoop-aws-3.2.0.jar \
-	dags/etl/spark_app.py
+dags/etl/spark_app.py

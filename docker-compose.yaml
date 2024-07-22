@@ -75,6 +75,40 @@ services:
     networks:
       - lakehouse-network
 
+  presto:
+    build: ./presto
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./presto/coordinator_config.properties:/opt/presto/etc/config.properties
+      - ./presto/etc/catalog:/opt/presto/etc/catalog
+    networks:
+      - lakehouse-network
+
+  presto-worker:
+    build: ./presto
+    volumes:
+      - ./presto/worker_config.properties:/opt/presto/etc/config.properties
+      - ./presto/etc/catalog:/opt/presto/etc/catalog
+    networks:
+      - lakehouse-network
+
+  superset:
+    image: amancevice/superset
+    container_name: superset
+    environment:
+      ADMIN_USERNAME: admin
+      ADMIN_PWD: admin
+      SUPERSET_SECRET_KEY: "sEbAy7h1Y6rMaeShAClXzyDF6sC1jdvQTV+yGPbfgYy6OdL3dzL2gxqY"
+    ports:
+      - 8088:8088
+    volumes:
+      - ./superset:/superset
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py
+    restart: unless-stopped
+    networks:
+      - lakehouse-network
+
 networks:
   lakehouse-network:
     driver: bridge
