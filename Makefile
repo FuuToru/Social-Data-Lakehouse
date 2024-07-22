@@ -1,4 +1,4 @@
-.PHONY: airflow spark scale-spark minio down run-spark
+.PHONY: airflow spark hive scale-spark minio down run-spark
 
 minio:
 	docker-compose up -d minio
@@ -10,6 +10,11 @@ spark:
 	docker-compose up -d spark-master
 	sleep 2
 	docker-compose up -d spark-worker
+
+hive:
+	docker-compose up -d mariadb
+	sleep 2
+	docker-compose up -d hive
 
 scale-spark:
 	docker-compose up -d --scale spark-worker=3
@@ -24,7 +29,7 @@ run-spark:
 	--num-executors 2 \
 	--packages io.delta:delta-core_2.12:1.0.0 \
 	--jars dags/jars/aws-java-sdk-1.11.534.jar,\
-dags/jars/aws-java-sdk-bundle-1.11.874.jar,\
-dags/jars/delta-core_2.12-1.0.0.jar,\
-dags/jars/hadoop-aws-3.2.0.jar \
-dags/etl/spark_app.py
+	dags/jars/aws-java-sdk-bundle-1.11.874.jar,\
+	dags/jars/delta-core_2.12-1.0.0.jar,\
+	dags/jars/hadoop-aws-3.2.0.jar \
+	dags/etl/spark_app.py

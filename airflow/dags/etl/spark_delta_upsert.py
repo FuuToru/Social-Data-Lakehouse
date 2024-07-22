@@ -47,7 +47,7 @@ def extract(sc, bucket_name, raw_data_path):
 
 
 # Spark session
-spark = get_spark_session("ETL", "http://minio:9000", "minio", "minio12345")
+spark = get_spark_session("ETL", "http://minio:9000", "root", "root12345")
 
 # Set log4j
 log4jLogger = spark._jvm.org.apache.log4j

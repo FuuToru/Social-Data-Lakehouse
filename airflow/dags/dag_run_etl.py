@@ -15,7 +15,7 @@ args = {
 dag = airflow.DAG(
     dag_id="daily_etl",
     default_args=args,
-    start_date=datetime(year=2021, month=9, day=19),
+    start_date=datetime(year=2023, month=9, day=19),
     schedule_interval="0 07 * * *",
     max_active_runs=1,
     concurrency=1,
