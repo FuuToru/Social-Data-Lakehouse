@@ -1,7 +1,7 @@
 <configuration>
     <property>
         <name>metastore.thrift.uris</name>
-        <value>thrift://0.0.0.0:9083</value>
+        <value>thrift://hive-metastore:9083</value>
         <description>Thrift URI for the remote metastore. Used by metastore client to connect to remote metastore.</description>
     </property>
     <property>
@@ -13,16 +13,12 @@
         <value>org.apache.hadoop.hive.metastore.DefaultPartitionExpressionProxy</value>
     </property>
     <property>
-        <name>metastore.warehouse.dir</name>
-        <value>s3a://spark/warehouse/</value>
-    </property>
-    <property>
         <name>javax.jdo.option.ConnectionDriverName</name>
         <value>com.mysql.cj.jdbc.Driver</value>
     </property>
     <property>
         <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:mysql://mariadb:3306/metastore_db</value>
+        <value>jdbc:mysql://mariadb:3306/metastore_db?createDatabaseIfNotExist=true</value>
     </property>
     <property>
         <name>javax.jdo.option.ConnectionUserName</name>
@@ -34,11 +30,11 @@
     </property>
     <property>
         <name>fs.s3a.access.key</name>
-        <value>hive</value>
+        <value>root</value>
     </property>
     <property>
         <name>fs.s3a.secret.key</name>
-        <value>hive12345</value>
+        <value>root12345</value>
     </property>
     <property>
         <name>fs.s3a.endpoint</name>
@@ -49,11 +45,7 @@
         <value>true</value>
     </property>
     <property>
-        <name>hive.input.format</name>
-        <value>io.delta.hive.HiveInputFormat</value>
-    </property>
-    <property>
-        <name>hive.tez.input.format</name>
-        <value>io.delta.hive.HiveInputFormat</value>
+        <name>fs.s3a.connection.ssl.enabled</name>
+        <value>false</value>
     </property>
 </configuration>

@@ -10,7 +10,10 @@ services:
       - 8000:8000
     volumes:
       - ./airflow/dags:/opt/airflow/dags
-    command: sleep infinity
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+    networks:
+      - lakehouse-network
 
   spark-master:
     build: ./spark
@@ -21,6 +24,8 @@ services:
       - 8080:8080
       - 18080:18080
     command: sh spark-master.sh
+    networks:
+      - lakehouse-network
 
   spark-worker:
     build: ./spark
@@ -28,6 +33,8 @@ services:
     ports:
       - "8081-8085:8081"
     command: sh spark-worker.sh
+    networks:
+      - lakehouse-network
 
   minio:
     image: "minio/minio:latest"
@@ -45,6 +52,8 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    networks:
+      - lakehouse-network
 
   mariadb:
     image: mariadb:latest
@@ -55,9 +64,17 @@ services:
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin
       MYSQL_DATABASE: metastore_db
+    networks:
+      - lakehouse-network
 
   hive:
     build: ./hive
     restart: unless-stopped
     ports:
       - 9083:9083
+    networks:
+      - lakehouse-network
+
+networks:
+  lakehouse-network:
+    driver: bridge
