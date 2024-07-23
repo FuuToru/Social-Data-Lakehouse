@@ -14,7 +14,7 @@ spark:
 	docker-compose up -d spark-worker
 
 scale-spark:
-	docker-compose scale spark-worker=3
+	docker-compose up --scale spark-worker=3
 
 hive:
 	docker-compose up -d mariadb
@@ -35,13 +35,7 @@ to-minio:
 	sudo cp -r .storage/data/* .storage/minio/datalake/
 
 exec-mariadb:
-	docker-compose exec mariadb mysql -u root -p -h localhost
-	# CREATE DATABASE dwh;
-	# USE dwh;
-	# CREATE TABLE IF NOT EXISTS main_events (id VARCHAR(255) NOT NULL, 
-	# device_id VARCHAR(255), event_code VARCHAR(255), event_detail VARCHAR(255), 
-	# created TIMESTAMP, group_id VARCHAR(255), description VARCHAR(255), 
-	# event_type VARCHAR(255), ds VARCHAR(255)) ENGINE=COLUMNSTORE;
+	docker-compose exec mariadb mariadb -u root -p
 
 run-spark:
 	docker-compose exec airflow \

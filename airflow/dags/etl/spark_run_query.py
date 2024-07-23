@@ -6,7 +6,7 @@ from common import get_spark_session
 
 # spark session
 spark = get_spark_session(
-    "ETL", "thrift://hive:9083", "http://minio:9000", "spark", "spark12345"
+    "ETL", "thrift://hive:9083", "http://minio:9000", "root", "root12345"
 )
 # Set log4j
 spark.sparkContext.setLogLevel("ERROR")

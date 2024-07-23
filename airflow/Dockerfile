@@ -33,6 +33,13 @@ ENV PYTHONPATH=$SPARK_HOME/python3:$SPARK_HOME/python3/lib/py4j-0.10.7-src.zip:$
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy JAR files
+COPY dags/jars/aws-java-sdk-1.11.534.jar /opt/airflow/dags/jars/
+COPY dags/jars/aws-java-sdk-bundle-1.11.874.jar /opt/airflow/dags/jars/
+COPY dags/jars/delta-core_2.12-1.0.0.jar /opt/airflow/dags/jars/
+COPY dags/jars/hadoop-aws-3.2.0.jar /opt/airflow/dags/jars/
+COPY dags/jars/mariadb-java-client-2.7.4.jar /opt/airflow/dags/jars/
+
 # Copy DAGs and set permissions
 COPY ./dags /opt/airflow/dags
 RUN chmod -R a+rwx /opt/airflow

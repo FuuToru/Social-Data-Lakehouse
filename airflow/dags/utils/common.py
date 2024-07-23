@@ -10,11 +10,11 @@ from pyspark.sql import functions as F
 def get_spark_session(
     appname, hive_metastore, minio_url, minio_access_key, minio_secret_key
 ):
-
     spark = (
         SparkSession.builder.appName(appname)
         .config("spark.network.timeout", "10000s")
         .config("hive.metastore.uris", hive_metastore)
+        .config("spark.sql.catalogImplementation", "hive")
         .config("hive.exec.dynamic.partition", "true")
         .config("hive.exec.dynamic.partition.mode", "nonstrict")
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic")

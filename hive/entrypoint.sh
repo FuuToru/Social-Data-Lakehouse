@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 export HADOOP_HOME=/opt/hadoop-3.2.0
 export HADOOP_CLASSPATH=${HADOOP_HOME}/share/hadoop/tools/lib/aws-java-sdk-bundle-1.11.375.jar:${HADOOP_HOME}/share/hadoop/tools/lib/hadoop-aws-3.2.0.jar
 export JAVA_HOME=/usr/local/openjdk-8
 
-# Make sure mariadb is ready
+# Ensure MariaDB is ready
 MAX_TRIES=8
 CURRENT_TRY=1
 SLEEP_BETWEEN_TRY=4

@@ -1,33 +1,48 @@
 <configuration>
+    <!-- Thrift URI for the remote metastore -->
     <property>
-        <name>metastore.thrift.uris</name>
-        <value>thrift://hive-metastore:9083</value>
+        <name>hive.metastore.uris</name>
+        <value>thrift://hive:9083</value>
         <description>Thrift URI for the remote metastore. Used by metastore client to connect to remote metastore.</description>
     </property>
+
+    <!-- Task threads for Metastore -->
     <property>
         <name>metastore.task.threads.always</name>
         <value>org.apache.hadoop.hive.metastore.events.EventCleanerTask,org.apache.hadoop.hive.metastore.MaterializationsCacheCleanerTask</value>
     </property>
+
+    <!-- Partition expression proxy -->
     <property>
         <name>metastore.expression.proxy</name>
         <value>org.apache.hadoop.hive.metastore.DefaultPartitionExpressionProxy</value>
     </property>
+
+    <!-- JDBC connection driver -->
     <property>
         <name>javax.jdo.option.ConnectionDriverName</name>
         <value>com.mysql.cj.jdbc.Driver</value>
     </property>
+
+    <!-- JDBC connection URL -->
     <property>
         <name>javax.jdo.option.ConnectionURL</name>
         <value>jdbc:mysql://mariadb:3306/metastore_db?createDatabaseIfNotExist=true</value>
     </property>
+
+    <!-- JDBC connection username -->
     <property>
         <name>javax.jdo.option.ConnectionUserName</name>
         <value>admin</value>
     </property>
+
+    <!-- JDBC connection password -->
     <property>
         <name>javax.jdo.option.ConnectionPassword</name>
         <value>admin</value>
     </property>
+
+    <!-- S3A filesystem configuration for MinIO -->
     <property>
         <name>fs.s3a.access.key</name>
         <value>root</value>

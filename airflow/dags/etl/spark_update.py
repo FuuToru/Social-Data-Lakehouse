@@ -7,7 +7,7 @@ from delta.tables import DeltaTable
 
 # spark session
 spark = get_spark_session(
-    "ETL", "thrift://hive:9083", "http://minio:9000", "spark", "spark12345"
+    "ETL", "thrift://hive:9083", "http://minio:9000", "root", "root12345"
 )
 # Set log4j
 spark.sparkContext.setLogLevel("ERROR")
@@ -37,13 +37,6 @@ def insert_data(
 
     delta_table = DeltaTable.forPath(spark, output_path)
 
-    # (delta_table.alias("t1").merge(
-    #     sdf.alias("t2"),
-    #     "t1.timestamp = t2.timestamp")
-    #     .whenMatched().updateAll()
-    #     .whenNotMatched().insertAll()
-    #     .execute())
-
     (
         delta_table.alias("t1")
         .merge(sdf.alias("t2"), "t1.timestamp = t2.timestamp")
@@ -61,7 +54,14 @@ def insert_data(
 
 if __name__ == "__main__":
 
-    input_path = str(sys.argv[1])
-    output_path = str(sys.argv[2])
+    if len(sys.argv) == 1:
+        input_path = "s3a://datalake/bitcoin_update.csv"
+        output_path = "s3a://datalake/deltatables/bitcoin/"
+    elif len(sys.argv) == 2:
+        input_path = str(sys.argv[1])
+        output_path = "s3a://datalake/deltatables/bitcoin/"
+    else:
+        input_path = str(sys.argv[1])
+        output_path = str(sys.argv[2])
 
     insert_data(input_path, output_path)
