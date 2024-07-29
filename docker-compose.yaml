@@ -153,10 +153,8 @@ services:
   superset:
     build: ./superset
     container_name: superset
-    environment:
-      SUPERSET_SECRET_KEY: "sEbAy7h1Y6rMaeShAClXzyDF6sC1jdvQTV+yGPbfgYy6OdL3dzL2gxqY"
-      SUPERSET_ADMIN: admin
-      SUPERSET_PASSWORD: admin
+    env_file:
+      - .env
     ports:
       - "8088:8088"
     volumes:

@@ -64,7 +64,7 @@ def create_spark_submit_operator(task_id, script_name):
 bronze_layer = create_spark_submit_operator("bronze_layer", "bronze.py")
 silver_layer = create_spark_submit_operator("silver_layer", "silver.py")
 gold_layer = create_spark_submit_operator("gold_layer", "gold.py")
-create_table = create_spark_submit_operator("create table", "create_table.py")
+create_table_task = create_spark_submit_operator("create_table", "create_table.py")
 
 # Dummy task to signify successful completion
 success_task = DummyOperator(
@@ -73,4 +73,11 @@ success_task = DummyOperator(
 )
 
 # Define task dependencies
-start_task >> bronze_layer >> silver_layer >> gold_layer >> create_table >> success_task
+(
+    start_task
+    >> bronze_layer
+    >> silver_layer
+    >> gold_layer
+    >> create_table_task
+    >> success_task
+)
