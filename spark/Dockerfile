@@ -1,42 +1,21 @@
-FROM python:3.9.16-slim
+FROM docker.io/bitnami/spark:3.3
 
-# Install OpenJDK 11 and required libraries
-RUN mkdir -p /usr/share/man/man1 && \
-    apt-get update && \
-    apt-get install -y openjdk-11-jdk libpq-dev libpcap-dev && \
-    rm -rf /var/lib/apt/lists/*
+USER root
 
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-ENV PATH=$PATH:$JAVA_HOME/bin
-RUN echo $JAVA_HOME
+# Install prerequisites
+RUN apt-get update && apt-get install -y curl
 
-# Install additional packages and clean up
-RUN apt-get update -y && \
-    apt-get install -y libzbar-dev bash gcc git libc-dev curl wget vim nano \
-    iputils-ping telnet openssh-client net-tools man unzip vim-tiny bc \
-    openssh-server thrift-compiler netcat sudo build-essential && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install Spark
-RUN curl -o spark-3.1.1-bin-hadoop3.2.tgz https://archive.apache.org/dist/spark/spark-3.1.1/spark-3.1.1-bin-hadoop3.2.tgz && \
-    tar -xzvf spark-3.1.1-bin-hadoop3.2.tgz && \
-    mv spark-3.1.1-bin-hadoop3.2 /opt/spark && \
-    rm -rf spark-3.1.1-bin-hadoop3.2.tgz
-
-ENV SPARK_HOME=/opt/spark
-ENV PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
-ENV PYTHONPATH=$SPARK_HOME/python3:$SPARK_HOME/python3/lib/py4j-0.10.7-src.zip:$PYTHONPATH
-
-# Copy and install Python dependencies
-COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Add Spark scripts
-ADD spark-master.sh spark-worker.sh /
-
-# Copy Spark configuration
-COPY spark-defaults.conf /opt/spark/conf/spark-defaults.conf
-
-RUN chmod +x /spark-master.sh /spark-worker.sh
+RUN curl -O https://repo1.maven.org/maven2/software/amazon/awssdk/s3/2.18.41/s3-2.18.41.jar \
+    && curl -O https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk/1.12.367/aws-java-sdk-1.12.367.jar \
+    && curl -O https://repo1.maven.org/maven2/io/delta/delta-core_2.12/2.2.0/delta-core_2.12-2.2.0.jar \
+    && curl -O https://repo1.maven.org/maven2/io/delta/delta-storage/2.2.0/delta-storage-2.2.0.jar \
+    && curl -O https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.19/mysql-connector-java-8.0.19.jar \
+    && curl -O https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar \
+    && curl -O https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.367/aws-java-sdk-bundle-1.12.367.jar \
+    && mv s3-2.18.41.jar /opt/bitnami/spark/jars \
+    && mv aws-java-sdk-1.12.367.jar /opt/bitnami/spark/jars \
+    && mv delta-core_2.12-2.2.0.jar /opt/bitnami/spark/jars \
+    && mv delta-storage-2.2.0.jar /opt/bitnami/spark/jars \
+    && mv mysql-connector-java-8.0.19.jar /opt/bitnami/spark/jars \
+    && mv hadoop-aws-3.3.4.jar /opt/bitnami/spark/jars \
+    && mv aws-java-sdk-bundle-1.12.367.jar /opt/bitnami/spark/jars

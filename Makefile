@@ -17,9 +17,9 @@ scale-spark:
 	docker-compose up --scale spark-worker=3
 
 hive:
-	docker-compose up -d mariadb
+	docker-compose up -d mysql
 	sleep 2
-	docker-compose up -d hive
+	docker-compose up -d hive-metastore
 
 presto-cluster:
 	docker-compose up -d presto presto-worker
@@ -33,9 +33,6 @@ presto-cli:
 
 to-minio:
 	sudo cp -r .storage/data/* .storage/minio/datalake/
-
-exec-mariadb:
-	docker-compose exec mariadb mariadb -u root -p
 
 run-spark:
 	docker-compose exec airflow \

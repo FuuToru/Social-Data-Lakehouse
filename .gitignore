@@ -130,7 +130,9 @@ dmypy.json
 
 
 .storage/minio
+.storage/mysql
 *.jar
 *.csv
 *.db
 superset/.setup-complete
+docker-volumes/
