@@ -83,6 +83,11 @@ Visualize the data using Apache Superset.
    AWS_ACCESS_KEY=minio
    AWS_SECRET_KEY=minio123
    AWS_S3_ENDPOINT=http://minio:9000
+
+   SUPERSET_SECRET_KEY= "yourrandomsecretkey"
+   SUPERSET_ADMIN= admin
+   SUPERSET_PASSWORD= admin
+
    ```
 
 3. **Build and run the services**:
