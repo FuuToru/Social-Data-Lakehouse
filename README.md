@@ -32,7 +32,7 @@ This platform integrates several specialized tools for data analytics, built on 
 ### System Architecture
 
 The system architecture is shown in the following diagram:
-![lakehouse](./.images/Data-System-Architecture.png)
+![lakehouse](./images/Data-System-Architecture.jpg)
 
 This architecture leverages stable technologies to build a scalable, reliable, and user-friendly data lakehouse platform. It supports storing, processing, and analyzing large amounts of data.
 
