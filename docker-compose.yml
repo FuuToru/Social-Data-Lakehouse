@@ -1,0 +1,214 @@
+version: "3"
+services:
+  minio:
+    image: minio/minio
+    container_name: minio
+    ports:
+      - "9001:9001"
+      - "9000:9000"
+    command: ["server", "/data", "--console-address", ":9001"]
+    volumes:
+      - ./mnt/minio/data:/data
+    environment:
+      MINIO_ACCESS_KEY: "minio"
+      MINIO_SECRET_KEY: "minio123"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - data_network
+
+  mysql:
+    image: mariadb:10.5.16
+    container_name: mysql
+    volumes:
+      - ./mnt/mysql:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: metastore_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - data_network
+
+  postgres-airflow:
+    image: postgres:13
+    container_name: postgres-airflow
+    volumes:
+      - ./mnt/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "airflow"
+      POSTGRES_PASSWORD: "airflow"
+      POSTGRES_DB: "airflow_db"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - data_network
+
+  hive-metastore:
+    build: ./docker/hive-metastore
+    container_name: hive-metastore
+    depends_on:
+      - mysql
+    volumes:
+      - ./docker/hive-metastore/metastore-site.xml:/opt/hive/conf/metastore-site.xml
+      - ./mnt/hive/warehouse:/mnt/hive/warehouse
+    ports:
+      - "9083:9083"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9083"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - data_network
+
+  spark-master:
+    build: ./docker/spark/spark-master
+    restart: always
+    container_name: spark-master
+    ports:
+      - "32766:8082"
+      - "32765:7077"
+    volumes:
+      - ./mnt/spark/apps:/opt/spark-apps
+      - ./mnt/spark/data:/opt/spark-data
+    healthcheck:
+      test: ["CMD", "nc", "-z", "spark-master", "8082"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - data_network
+
+  spark-worker:
+    build: ./docker/spark/spark-worker
+    container_name: spark-worker
+    depends_on:
+      - spark-master
+    ports:
+      - "32764:8081"
+    volumes:
+      - ./mnt/spark/apps:/opt/spark-apps
+      - ./mnt/spark/data:/opt/spark-data
+    healthcheck:
+      test: ["CMD", "nc", "-z", "spark-worker", "8081"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - data_network
+
+  airflow:
+    build: ./docker/airflow
+    restart: always
+    container_name: airflow
+    depends_on:
+      - postgres-airflow
+    volumes:
+      - ./mnt/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+      - ./mnt/airflow/dags:/opt/airflow/dags
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow_db"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - data_network
+
+  trino-coordinator:
+    build: ./docker/trino
+    container_name: trino-coordinator
+    environment:
+      - TRINO_NODE_ID=coordinator
+    volumes:
+      - ./mnt/trino/data:/opt/trino/data
+      - ./docker/trino/etc/catalog/hive.properties:/opt/trino/server/etc/catalog/hive.properties
+      - ./docker/trino/etc/catalog/delta.properties:/opt/trino/server/etc/catalog/delta.properties
+      - ./docker/trino/etc/node.properties:/opt/trino/server/etc/node.properties
+      - ./docker/trino/etc/config.properties:/opt/trino/server/etc/config.properties
+      - ./docker/trino/etc/jvm.config:/opt/trino/server/etc/jvm.config
+    ports:
+      - "8443:8443"
+    networks:
+      - data_network
+    depends_on:
+      - hive-metastore
+    command: ["bin/launcher", "run"]
+
+  trino-worker:
+    build: ./docker/trino
+    container_name: trino-worker
+    environment:
+      - TRINO_NODE_ID=worker
+    volumes:
+      - ./mnt/trino/data:/opt/trino/data
+      - ./docker/trino/etc/catalog/hive.properties:/opt/trino/server/etc/catalog/hive.properties
+      - ./docker/trino/etc/catalog/delta.properties:/opt/trino/server/etc/catalog/delta.properties
+      - ./docker/trino/etc/node.properties:/opt/trino/server/etc/node.properties
+      - ./docker/trino/etc/config.properties:/opt/trino/server/etc/config.properties
+      - ./docker/trino/etc/jvm.config:/opt/trino/server/etc/jvm.config
+    networks:
+      - data_network
+    depends_on:
+      - trino-coordinator
+    command: ["bin/launcher", "run"]
+
+  superset:
+    build: ./docker/superset
+    container_name: superset
+    ports:
+      - 8088:8088
+    environment:
+      SUPERSET_ENV: development
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+      PYTHONPATH: /app/pythonpath
+    volumes:
+      - ./docker/superset/superset_config.py:/app/pythonpath/superset_config.py
+    depends_on:
+      - postgres-superset
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8088/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data_network
+
+  postgres-superset:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: superset
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset
+    volumes:
+      - ./mnt/postgres-superset:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U superset"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data_network
+
+networks:
+  data_network:
+    driver: bridge

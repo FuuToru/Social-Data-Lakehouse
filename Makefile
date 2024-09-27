@@ -1,43 +1,40 @@
-.PHONY: airflow spark hive scale-spark minio superset down
-down:
-	docker-compose down -v
+.PHONY: spark trino-cluster minio mysql postgres-airflow hive-metastore airflow superset clean
+
+all: minio mysql postgres-airflow hive-metastore spark trino-cluster airflow superset
 
 minio:
 	docker-compose up -d minio
+	sleep 2
 
-airflow:
-	docker-compose up -d airflow
+mysql:
+	docker-compose up -d mysql
+	sleep 2
+
+postgres-airflow:
+	docker-compose up -d postgres-airflow
+	sleep 2
+
+hive-metastore:
+	docker-compose up -d hive-metastore
+	sleep 2
 
 spark:
 	docker-compose up -d spark-master
 	sleep 2
 	docker-compose up -d spark-worker
-
-scale-spark:
-	docker-compose up --scale spark-worker=3
-
-hive:
-	docker-compose up -d mysql
 	sleep 2
-	docker-compose up -d hive-metastore
 
-presto-cluster:
-	docker-compose up -d presto presto-worker
+trino-cluster:
+	docker-compose up -d trino-coordinator trino-worker
+	sleep 2
+
+airflow:
+	docker-compose up -d airflow
+	sleep 2
 
 superset:
 	docker-compose up -d superset
+	sleep 2
 
-presto-cli:
-	docker-compose exec presto \
-	presto --server localhost:8888 --catalog hive --schema default
-
-to-minio:
-	sudo cp -r .storage/data/* .storage/minio/datalake/
-
-run-spark:
-	docker-compose exec airflow \
-	spark-submit --master spark://spark-master:7077 \
-	--deploy-mode client --driver-memory 2g --num-executors 2 \
-	--packages io.delta:delta-core_2.12:1.0.0 --py-files dags/utils/common.py \
-	--jars dags/jars/aws-java-sdk-1.11.534.jar,dags/jars/aws-java-sdk-bundle-1.11.874.jar,dags/jars/delta-core_2.12-1.0.0.jar,dags/jars/hadoop-aws-3.2.0.jar,dags/jars/mariadb-java-client-2.7.4.jar \
-	dags/etl/spark_initial.py
+clean:
+	docker-compose down
