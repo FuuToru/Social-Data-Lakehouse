@@ -2,24 +2,24 @@
 
 ## Introduction
 
-This project is designed to construct a data lakehouse, enabling organizations to store, manage, and analyze large datasets in a cost-effective, secure, and scalable manner. The data lakehouse provides a centralized repository for all data, allowing users to easily access and query the data with a unified interface.
+This project is designed to construct a data lakehouse, enabling organizations to store, manage, and analyze large datasets in a cost-effective, secure, and scalable manner. The data lakehouse serves as a centralized repository for all data, allowing users to easily access and query it through a unified interface.
 
 Key components include:
 
-- **MinIO** for distributed object storage
-- **Delta Lake** for ACID-compliant transactions
-- **Apache Spark** for distributed computing and analytics
-- **Trino** for fast SQL queries
-- **Hive Metastore** for a unified data catalog
-- **Apache Superset** for data visualization
+- **MinIO** for distributed object storage.
+- **Delta Lake** for ACID-compliant transactions.
+- **Apache Spark** for distributed computing and analytics.
+- **Trino** for fast SQL queries.
+- **Hive Metastore** for a unified data catalog.
+- **Apache Superset** for data visualization.
 
-This data lakehouse enables organizations to quickly and easily access and analyze valuable data, supporting better data-driven decisions.
+By using these components, organizations can quickly and efficiently access and analyze valuable data, empowering better data-driven decision-making.
 
 ## Description
 
 **Warning**: This project is a work in progress and not yet ready for production use. Please use it at your own risk.
 
-This platform integrates several specialized tools for data analytics, built on the following components:
+This platform integrates several specialized tools for data analytics, built upon the following components:
 
 - [Apache Spark](https://spark.apache.org/): A unified analytics engine for big data processing, with modules for streaming, SQL, machine learning, and graph processing.
 - [Delta Lake](https://delta.io/): An open-source storage layer that brings ACID transactions to Apache Spark and big data workloads.
@@ -31,19 +31,27 @@ This platform integrates several specialized tools for data analytics, built on 
 
 ### System Architecture
 
-The system architecture is shown in the following diagram:
-![lakehouse](./images/Data_architechture.jpg)
+The system architecture is illustrated in the following diagram:
+![Lakehouse Architecture](./images/Data_architechture.jpg)
 
-This architecture leverages stable technologies to build a scalable, reliable, and user-friendly data lakehouse platform. It supports storing, processing, and analyzing large amounts of data.
+This architecture leverages stable technologies to build a scalable, reliable, and user-friendly data lakehouse platform, supporting the storage, processing, and analysis of large datasets.
 
-Despite using stable technologies, the platform is a work in progress. We are continuously improving the platform and adding new features. We welcome any suggestions or feedback to help us enhance the platform.
+Despite using stable technologies, the platform is a work in progress. We are continuously improving it and adding new features. Any suggestions or feedback to help us enhance the platform are welcome.
 
-### Data pipeline
+### Data Pipeline
+
+The data pipeline is orchestrated using Apache Airflow, with a graphical representation of the pipeline shown below:
+![Airflow Data Pipeline](./images/Graph_pipeline_airlfow.png)
 
 ### Data Visualization
 
-Visualize the data using Apache Superset.
-![lakehouse](./images/sales_dashboard.png)
+Data visualization is handled through Apache Superset. Below is an example of a dashboard built with Superset, visualizing data from NYC:
+![Superset Dashboard](./images/nyc_dashboard_superset.png)
+
+### Query Execution
+
+Trino is used for executing fast SQL queries on the data stored in the lakehouse. An example of Trino's query UI is shown here:
+![Trino Query UI](./images/query_ui_trino.png)
 
 ## Getting Started
 
