@@ -5,7 +5,7 @@ export HADOOP_HOME=/opt/hadoop-3.2.1
 export HIVE_HOME=/opt/metastore
 export HADOOP_CLASSPATH=$($HADOOP_HOME/bin/hadoop classpath)
 # Set environment variables
-export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
 export PATH=$JAVA_HOME/bin:$PATH
 
 # Make sure MariaDB is ready

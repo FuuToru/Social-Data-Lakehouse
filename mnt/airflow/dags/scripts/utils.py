@@ -36,7 +36,7 @@ def spark_session():
             "spark.sql.catalog.spark_catalog",
             "org.apache.spark.sql.delta.catalog.DeltaCatalog",
         )
-        .config("spark.sql.warehouse.dir", f"s3a://{AWS_BUCKET_NAME}/")
+        .config("spark.sql.warehouse.dir", f"s3a://{AWS_BUCKET_NAME}/warehouse")
         .config(
             "spark.jars",
             "/opt/spark/jars/hadoop-aws-3.3.4.jar,"

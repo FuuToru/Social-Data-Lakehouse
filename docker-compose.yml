@@ -1,4 +1,3 @@
-version: "3"
 services:
   minio:
     image: minio/minio
@@ -20,25 +19,25 @@ services:
     networks:
       - data_network
 
-  mysql:
-    image: mariadb:10.5.16
-    container_name: mysql
-    volumes:
-      - ./mnt/mysql:/var/lib/mysql
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: admin
-      MYSQL_DATABASE: metastore_db
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: admin
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - data_network
+  # mysql:
+  #   image: mariadb:10.5.16
+  #   container_name: mysql
+  #   volumes:
+  #     - ./mnt/mysql:/var/lib/mysql
+  #   ports:
+  #     - "3306:3306"
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: admin
+  #     MYSQL_DATABASE: metastore_db
+  #     MYSQL_USER: admin
+  #     MYSQL_PASSWORD: admin
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   networks:
+  #     - data_network
 
   postgres-airflow:
     image: postgres:13
@@ -60,20 +59,29 @@ services:
       - data_network
 
   hive-metastore:
-    build: ./docker/hive-metastore
+    image: 'bitsondatadev/hive-metastore:latest'
     container_name: hive-metastore
-    depends_on:
-      - mysql
-    volumes:
-      - ./docker/hive-metastore/metastore-site.xml:/opt/hive/conf/metastore-site.xml
-      - ./mnt/hive/warehouse:/mnt/hive/warehouse
     ports:
-      - "9083:9083"
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "9083"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - '9083:9083' # Metastore Thrift
+    volumes:
+      - ./metastore_conf/metastore-site.xml:/opt/apache-hive-metastore-3.0.0-bin/conf/metastore-site.xml:ro
+    environment:
+      METASTORE_DB_HOSTNAME: mariadb
+    depends_on:
+      - mariadb
+    networks:
+      - data_network
+
+  mariadb:
+    image: 'mariadb:10.11.2'
+    container_name: mariadb
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+      MYSQL_DATABASE: metastore_db
     networks:
       - data_network
 
@@ -212,3 +220,4 @@ services:
 networks:
   data_network:
     driver: bridge
+    external: True
